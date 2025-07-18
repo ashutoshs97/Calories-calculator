@@ -3,32 +3,441 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Vision AI</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Food Nutrition Analyzer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for theme icon (no longer strictly needed but kept for general utility) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e2e8f0; /* Lighter blue-gray background */
+            /* Removed transition as dark mode is removed */
+        }
+        /* Removed body.dark styles */
+        .container {
+            max-width: 800px;
+            margin: 2.5rem auto; /* Increased margin for more space */
+            padding: 2rem; /* Increased padding */
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05); /* Stronger shadow */
+            transition: all 0.3s ease-in-out; /* Smooth transition for potential future animations */
+        }
+        /* Removed body.dark .container styles */
+        .file-input-label {
+            display: inline-block;
+            cursor: pointer;
+            padding: 0.85rem 1.8rem; /* Slightly larger padding */
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Gradient background (Indigo to Violet) */
+            color: white;
+            border-radius: 0.75rem; /* More rounded */
+            font-weight: 600; /* Bolder font */
+            transition: all 0.3s ease; /* Smooth transition */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .file-input-label:hover {
+            background-image: linear-gradient(to right, #4f46e5, #7c3aed); /* Darker gradient on hover */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Slightly larger shadow on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+        .button-primary {
+            background-image: linear-gradient(to right, #10b981, #34d399); /* Emerald to Light Emerald gradient */
+            color: white;
+            padding: 0.85rem 1.8rem; /* Slightly larger padding */
+            border-radius: 0.75rem; /* More rounded */
+            font-weight: 600; /* Bolder font */
+            transition: all 0.3s ease; /* Smooth transition */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .button-primary:hover {
+            background-image: linear-gradient(to right, #059669, #10b981); /* Darker gradient on hover */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Slightly larger shadow on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6366f1; /* Matching primary color */
+            border-radius: 50%;
+            width: 28px; /* Slightly larger spinner */
+            height: 28px;
+            animation: spin 1s linear infinite;
+        }
+        /* Removed body.dark .loading-spinner styles */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .nutrition-card {
+            background-color: #f8fafc; /* Very light blue-gray for cards */
+            padding: 1.25rem; /* Increased padding */
+            border-radius: 0.75rem; /* Rounded corners for cards */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow for cards */
+            border: 1px solid #e2e8f0; /* Light border */
+            transition: transform 0.2s ease; /* Smooth hover effect */
+        }
+        /* Removed body.dark .nutrition-card styles */
+        .nutrition-card:hover {
+            transform: translateY(-3px); /* Lift effect on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        /* Removed body.dark .nutrition-card:hover styles */
+        .results-section {
+            background-color: #edf2f7; /* Light blue-gray for results section */
+            border-color: #d1d9e0;
+        }
+        /* Removed body.dark .results-section styles */
+        /* Removed .theme-toggle-button and its related styles */
+        .health-score-good {
+            background-color: #d1fae5; /* Light green */
+            color: #065f46; /* Dark green text */
+            border: 1px solid #a7f3d0;
+        }
+        /* Removed body.dark .health-score-good styles */
+        .health-score-moderate {
+            background-color: #fef3c7; /* Light yellow */
+            color: #92400e; /* Dark orange text */
+            border: 1px solid #fde68a;
+        }
+        /* Removed body.dark .health-score-moderate styles */
+        .health-score-poor {
+            background-color: #fee2e2; /* Light red */
+            color: #991b1b; /* Dark red text */
+            border: 1px solid #fecaca;
+        }
+        /* Removed body.dark .health-score-poor styles */
+        /* Removed .goal-insight-card styles as the feature is removed */
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Food Vision AI</h1>
-        <p>Upload a photo of your food to get an estimated calorie count and other details.</p>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center relative">
+    <!-- Removed Theme Toggle Button -->
+    <!-- <button id="themeToggle" class="theme-toggle-button">
+        <i class="fas fa-moon"></i>
+    </button> -->
 
-        <div class="upload-area">
-            <input type="file" id="foodImageInput" accept="image/*">
-            <button id="analyzeButton" disabled>Analyze Food</button>
+    <div class="container flex flex-col items-center space-y-8"> <!-- Increased space-y -->
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-4 text-center leading-tight">Food Nutrition Analyzer</h1>
+
+        <!-- File Upload Section -->
+        <div class="w-full flex flex-col items-center space-y-6"> <!-- Increased space-y -->
+            <input type="file" id="imageUpload" accept="image/*" class="hidden">
+            <label for="imageUpload" class="file-input-label">
+                Upload Food Photo
+            </label>
+            <img id="previewImage" src="https://placehold.co/300x200/cbd5e1/4a5568?text=Upload+Image" alt="Image Preview" class="w-full max-w-sm h-auto rounded-xl shadow-xl object-cover border-4 border-white"> <!-- Removed dark:border-gray-700 -->
+            <button id="analyzeButton" class="button-primary focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-75" disabled>
+                Analyze Nutrition
+            </button>
         </div>
 
-        <div class="image-preview" id="imagePreview">
-            <img id="uploadedImage" src="#" alt="Image Preview" style="display: none;">
-            <p id="noImageText">No image selected</p>
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden flex items-center space-x-3 text-gray-700 text-lg"> <!-- Removed dark:text-gray-300 -->
+            <div class="loading-spinner"></div>
+            <span>Analyzing your meal...</span>
         </div>
 
-        <div class="results-area">
-            <h2>Analysis Results</h2>
-            <div id="loadingMessage" style="display: none;">Analyzing...</div>
-            <div id="errorMessage" style="display: none; color: red;"></div>
-            <pre id="analysisResults"></pre>
+        <!-- Results Section -->
+        <div id="results" class="w-full hidden bg-blue-50 p-8 rounded-2xl shadow-2xl border border-blue-100 results-section"> <!-- Removed dark:bg-red-800, dark:text-red-100, dark:border-red-600 -->
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Nutrition Facts</h2> <!-- Removed dark:text-white -->
+            <div id="nutritionDetails" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-700"> <!-- More columns for larger screens, larger gap -->
+                <!-- Nutrition details will be inserted here by JavaScript -->
+            </div>
+
+            <!-- Health Score Section -->
+            <div id="healthScoreSection" class="mt-8 hidden">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-3">Health Insights:</h3> <!-- Removed dark:text-white -->
+                <div id="healthScoreCard" class="p-4 rounded-lg text-center shadow-md">
+                    <p class="text-lg font-medium">Health Score: <span id="scoreValue" class="text-2xl font-bold"></span></p>
+                    <p id="scoreInsight" class="mt-2 text-base"></p>
+                </div>
+            </div>
+
+            <div class="mt-8"> <!-- Increased margin-top -->
+                <h3 class="text-2xl font-semibold text-gray-800 mb-3">Description:</h3> <!-- Removed dark:text-white -->
+                <p id="description" class="text-gray-700 leading-relaxed text-lg"></p> <!-- Removed dark:text-gray-300 -->
+            </div>
+            <div class="mt-8"> <!-- Increased margin-top -->
+                <h3 class="text-2xl font-semibold text-gray-800 mb-3">Likely Ingredients:</h3> <!-- Removed dark:text-white -->
+                <ul id="ingredientsList" class="list-disc list-inside text-gray-700 pl-6 text-lg space-y-1"> <!-- Removed dark:text-gray-300 -->
+                    <!-- Ingredients will be inserted here by JavaScript -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="hidden p-6 bg-red-100 text-red-800 border border-red-400 rounded-xl w-full text-center font-medium text-lg shadow-md"> <!-- Removed dark:bg-red-800, dark:text-red-100, dark:border-red-600 -->
+            <!-- Error messages will be inserted here -->
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module">
+        // Get DOM elements
+        const imageUpload = document.getElementById('imageUpload');
+        const previewImage = document.getElementById('previewImage');
+        const analyzeButton = document.getElementById('analyzeButton');
+        const loading = document.getElementById('loading');
+        const resultsDiv = document.getElementById('results');
+        const nutritionDetails = document.getElementById('nutritionDetails');
+        const descriptionElem = document.getElementById('description');
+        const ingredientsList = document.getElementById('ingredientsList');
+        const errorMessage = document.getElementById('errorMessage');
+        // Removed themeToggle from DOM element selection
+        // const themeToggle = document.getElementById('themeToggle');
+        const healthScoreSection = document.getElementById('healthScoreSection');
+        const healthScoreCard = document.getElementById('healthScoreCard');
+        const scoreValue = document.getElementById('scoreValue');
+        const scoreInsight = document.getElementById('scoreInsight');
+
+        let base64Image = ''; // Stores the base64 encoded image
+
+        // User profile data (from previous conversation) - still kept for potential future use or other calculations
+        const userProfile = {
+            age: 23,
+            weightKg: 91,
+            heightCm: 178,
+            activityLevel: 'moderate'
+        };
+
+        // --- Removed Theme Toggling Logic ---
+        /*
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.body.classList.add('dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.body.classList.remove('dark');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        };
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+        */
+
+        // --- Image Upload and Analysis Logic ---
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    base64Image = e.target.result.split(',')[1]; // Extract base64 string
+                    analyzeButton.disabled = false; // Enable analyze button
+                    hideResultsAndError();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewImage.src = "https://placehold.co/300x200/cbd5e1/4a5568?text=Upload+Image";
+                base64Image = '';
+                analyzeButton.disabled = true;
+                hideResultsAndError();
+            }
+        });
+
+        analyzeButton.addEventListener('click', async function() {
+            if (!base64Image) {
+                showError("Please upload an image first.");
+                return;
+            }
+
+            loading.classList.remove('hidden');
+            hideResultsAndError();
+            analyzeButton.disabled = true;
+
+            try {
+                const prompt = "Analyze the food in this image. Provide the dish name, estimated total calories, protein (in grams), carbohydrates (in grams), fat (in grams), estimated serving size in grams, a list of likely ingredients, and a brief description. Provide the output as a JSON object strictly following this schema. If any value is unknown or cannot be estimated, use 0 for numbers and 'N/A' or an empty array for strings/arrays.";
+
+                const responseSchema = {
+                    type: "OBJECT",
+                    properties: {
+                        "dishName": { "type": "STRING" },
+                        "calories": { "type": "NUMBER" },
+                        "protein_g": { "type": "NUMBER" },
+                        "carbs_g": { "type": "NUMBER" },
+                        "fat_g": { "type": "NUMBER" },
+                        "servingSize_g": { "type": "NUMBER" },
+                        "ingredients": {
+                            "type": "ARRAY",
+                            "items": { "type": "STRING" }
+                        },
+                        "description": { "type": "STRING" }
+                    },
+                    required: ["dishName", "calories", "protein_g", "carbs_g", "fat_g", "servingSize_g", "ingredients", "description"]
+                };
+
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: imageUpload.files[0].type,
+                                        data: base64Image
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: responseSchema
+                    }
+                };
+
+                const apiKey = "AIzaSyA0SRTKK-PcppC7u8B7VUKlqOnjY21bxQE"; // API Key inserted here
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    const parsedData = JSON.parse(jsonText);
+
+                    displayResults(parsedData);
+                    calculateAndDisplayHealthScore(parsedData);
+                } else {
+                    throw new Error("Unexpected API response structure or no content.");
+                }
+
+            } catch (error) {
+                console.error("Error analyzing image:", error);
+                showError(`Failed to analyze food: ${error.message}. Please try again.`);
+            } finally {
+                loading.classList.add('hidden');
+                analyzeButton.disabled = false;
+            }
+        });
+
+        // Function to calculate and display general health score
+        function calculateAndDisplayHealthScore(data) {
+            healthScoreSection.classList.remove('hidden');
+            let score = 0;
+            let insight = "";
+            let scoreClass = "";
+
+            const calories = data.calories || 0;
+            const protein = data.protein_g || 0;
+            const carbs = data.carbs_g || 0;
+            const fat = data.fat_g || 0;
+
+            // Simple scoring logic (can be refined)
+            // Reward balanced macros, penalize excessive fat/sugar (implied by high carbs without fiber context)
+            // This is a very basic model and should not be taken as professional dietary advice.
+            if (calories > 800) score -= 2;
+            else if (calories > 500) score -= 1;
+            else score += 1; // Moderate calories are good
+
+            if (protein > 20) score += 2;
+            else if (protein > 10) score += 1;
+
+            if (fat > 30) score -= 2;
+            else if (fat > 15) score -= 1;
+            else score += 1; // Moderate fat is good
+
+            // Adjust score to be between 0-10
+            score = Math.max(0, Math.min(10, score + 5));
+
+            if (score >= 7) {
+                insight = "This looks like a generally healthy choice! Well balanced for a typical meal.";
+                scoreClass = "health-score-good";
+            } else if (score >= 4) {
+                insight = "This meal is moderate. Consider balancing with other healthy options throughout your day.";
+                scoreClass = "health-score-moderate";
+            } else {
+                insight = "This meal might be high in calories or unhealthy fats. Consider a smaller portion or healthier alternatives for better balance.";
+                scoreClass = "health-score-poor";
+            }
+
+            scoreValue.textContent = score.toFixed(0) + "/10";
+            scoreInsight.textContent = insight;
+            healthScoreCard.className = `p-4 rounded-lg text-center shadow-md ${scoreClass}`;
+        }
+
+        // Function to display results
+        function displayResults(data) {
+            resultsDiv.classList.remove('hidden');
+            errorMessage.classList.add('hidden'); // Hide any previous error
+
+            nutritionDetails.innerHTML = `
+                <div class="nutrition-card">
+                    <p class="text-gray-600 text-base">Dish Name</p>
+                    <p class="text-xl font-semibold text-gray-900 mt-1">${data.dishName || 'N/A'}</p>
+                </div>
+                <div class="nutrition-card">
+                    <p class="text-gray-600 text-base">Calories</p>
+                    <p class="text-xl font-semibold text-gray-900 mt-1">${data.calories !== undefined ? data.calories.toFixed(0) : 'N/A'} kcal</p>
+                </div>
+                <div class="nutrition-card">
+                    <p class="text-gray-600 text-base">Protein</p>
+                    <p class="text-xl font-semibold text-gray-900 mt-1">${data.protein_g !== undefined ? data.protein_g.toFixed(1) : 'N/A'} g</p>
+                </div>
+                <div class="nutrition-card">
+                    <p class="text-gray-600 text-base">Carbohydrates</p>
+                    <p class="text-xl font-semibold text-gray-900 mt-1">${data.carbs_g !== undefined ? data.carbs_g.toFixed(1) : 'N/A'} g</p>
+                </div>
+                <div class="nutrition-card">
+                    <p class="text-gray-600 text-base">Fat</p>
+                    <p class="text-xl font-semibold text-gray-900 mt-1">${data.fat_g !== undefined ? data.fat_g.toFixed(1) : 'N/A'} g</p>
+                </div>
+                <div class="nutrition-card">
+                    <p class="text-gray-600 text-base">Serving Size</p>
+                    <p class="text-xl font-semibold text-gray-900 mt-1">${data.servingSize_g !== undefined ? data.servingSize_g.toFixed(0) : 'N/A'} g</p>
+                </div>
+            `;
+
+            descriptionElem.textContent = data.description || 'No description available.';
+
+            ingredientsList.innerHTML = '';
+            if (data.ingredients && data.ingredients.length > 0) {
+                data.ingredients.forEach(ingredient => {
+                    const li = document.createElement('li');
+                    li.textContent = ingredient;
+                    ingredientsList.appendChild(li);
+                });
+            } else {
+                ingredientsList.innerHTML = '<li>No ingredients listed.</li>';
+            }
+        }
+
+        // Function to show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            resultsDiv.classList.add('hidden'); // Hide results if showing error
+            healthScoreSection.classList.add('hidden'); // Also hide health score section
+        }
+
+        // Function to hide results and error messages
+        function hideResultsAndError() {
+            resultsDiv.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            healthScoreSection.classList.add('hidden'); // Also hide health score section
+        }
+    </script>
 </body>
 </html>
